@@ -1,8 +1,14 @@
 import javax.swing.*;
-import java.awt.event.*;
+import java.awt.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.event.KeyAdapter;
+import java.awt.event.KeyEvent;
 
 public class Window extends JFrame implements ActionListener {
-    private final Snake snake;
+    private Snake snake;
+
+    private final Timer timer;
 
     public Window() {
         super();
@@ -10,7 +16,7 @@ public class Window extends JFrame implements ActionListener {
         snake = new Snake();
         add(snake);
 
-        Timer timer = new Timer(Util.delay, this);
+        timer = new Timer(Util.delay, this);
         timer.start();
 
         setDefaultCloseOperation(EXIT_ON_CLOSE);
@@ -26,6 +32,14 @@ public class Window extends JFrame implements ActionListener {
 
     @Override
     public void actionPerformed(ActionEvent actionEvent) {
+        if (snake.isEndGame()) {
+            timer.stop();
+
+            Object[] options = {"OK"};
+            JOptionPane.showOptionDialog(this, "Score " + snake.getSnakeLength(), "You Lost", JOptionPane.DEFAULT_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[0]);
+
+            System.exit(0);
+        }
         repaint();
     }
 

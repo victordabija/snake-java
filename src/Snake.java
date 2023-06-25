@@ -1,36 +1,34 @@
 import javax.swing.*;
 import java.awt.*;
-import java.sql.SQLInput;
-import java.util.LinkedList;
+import java.util.ArrayList;
 
 public class Snake extends JPanel {
 
     private Square food;
-    private final LinkedList<Square> snake = new LinkedList<>();
+    private final ArrayList<Square> snake = new ArrayList<>();
     private String direction;
 
-    public Snake() {
-        snake.addFirst(new Square(7 * Square.squareSize, 7 * Square.squareSize));
-        snake.addFirst(new Square(7 * Square.squareSize, 6 * Square.squareSize));
+    private boolean endGame = false;
 
-        direction = Util.UP;
-        food = new Square(Util.getRandom(), Util.getRandom());
+    public Snake() {
+        snake.add(new Square(7 * Square.squareSize, 7 * Square.squareSize));
+        snake.add(new Square(6 * Square.squareSize, 7 * Square.squareSize));
+
+        direction = Util.RIGHT;
+        food = generateFood();
     }
 
     private void init(Graphics g) {
-        // todo endgame
-        if (isEndgame()) {
-            System.out.println("EndGame");
-        }
+        Square head = snake.get(0);
+        int headX = head.getX();
+        int headY = head.getY();
+
+        checkEndgame();
 
         Graphics2D g2d = (Graphics2D) g;
 
         drawSnake(g2d);
         drawFood(g2d);
-
-        Square head = snake.getFirst();
-        int headX = head.getX();
-        int headY = head.getY();
 
         if (Util.UP.equals(getDirection())) {
             headY -= Square.squareSize;
@@ -49,34 +47,31 @@ public class Snake extends JPanel {
         }
 
         if (headX != food.getX() || headY != food.getY()) {
-            snake.removeLast();
+            snake.remove(snake.size() - 1);
         } else {
-            food = new Square(Util.getRandom(), Util.getRandom());
+            food = generateFood();
         }
 
-        head.setX(headX);
-        head.setY(headY);
-
-        snake.addFirst(new Square(headX, headY));
+        snake.add(0, new Square(headX, headY));
     }
 
-    private boolean isEndgame() {
-        Square head = snake.getFirst();
+    public void checkEndgame() {
+        Square head = snake.get(0);
+        int headX = head.getX();
+        int headY = head.getY();
 
-        if (head.getX() > (Util.cols - 1) * Square.squareSize || head.getY() > (Util.rows - 1) * Square.squareSize || head.getX() < 0 || head.getY() < 0) {
-            return true;
+
+        if (headX > (Util.cols - 1) * Square.squareSize || headY > (Util.rows - 2) * Square.squareSize || headX < 0 || headY < 0) {
+            endGame = true;
+            return;
         }
 
-        LinkedList<Square> newSnake = snake;
-        newSnake.removeFirst();
-
-        for (Square s : newSnake) {
-            if (head.getX() == s.getX() && head.getY() == s.getY()) {
-                return true;
+        for (int i = 1; i < snake.size(); i++) {
+            if (headX == snake.get(i).getX() && headY == snake.get(i).getY()) {
+                endGame = true;
+                return;
             }
         }
-
-        return false;
     }
 
     public void drawSnake(Graphics2D g) {
@@ -87,6 +82,16 @@ public class Snake extends JPanel {
 
     public void drawFood(Graphics2D g) {
         drawSquare(food, g, Util.foodColor);
+    }
+
+    public Square generateFood() {
+        Square food = new Square(Util.getRandom(), Util.getRandom());
+
+        if (isInSnakeBody(food)) {
+            return generateFood();
+        }
+
+        return food;
     }
 
     public static void drawSquare(Square square, Graphics2D g2d, Color color) {
@@ -103,11 +108,28 @@ public class Snake extends JPanel {
         return direction;
     }
 
+    public boolean isEndGame() {
+        return endGame;
+    }
+
+    public boolean isInSnakeBody(Square square) {
+        for (Square s : snake) {
+            if (square.getX() == s.getX() && square.getY() == s.getY()) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public int getSnakeLength() {
+        return snake.size() - 1;
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
         setBackground(Util.backgroundColor);
-//        drawSnake(g);
         init(g);
     }
 }
